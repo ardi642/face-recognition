@@ -42,7 +42,7 @@ class DatasetFrame(tk.Frame):
       embeddings.append(data['embedding'])
       identities.append(data['identity'])
     
-    svm = SVC()
+    svm = SVC(probability=True)
     svm.fit(embeddings, identities)
     with open('SVM_Model/svm_model.pkl','wb') as model_file:
         pickle.dump(svm, model_file)
