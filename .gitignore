@@ -4,3 +4,4 @@ DATASET/
 *.ipynb
 .ipynb_checkpoints/
 *.pkl
+SVM_model/
