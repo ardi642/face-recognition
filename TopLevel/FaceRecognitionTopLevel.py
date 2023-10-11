@@ -8,8 +8,7 @@ from FaceDetectionModel.HaarCascadeModel import HaarCascadeModel
 from FaceDetectionModel.HOGModel import HOGModel
 
 from deepface import DeepFace
-import logging
-import pickle
+import logging, pickle, numpy as np
 
 from configuration import configuration
 
@@ -111,12 +110,15 @@ class FaceRecognitionTopLevel(tk.Toplevel):
       image_embedding = get_face_embedding(detected_image)
       arr_image_embedding = [image_embedding]
       label = self.model.predict(arr_image_embedding)[0]
+      probabilities = self.model.predict_proba(arr_image_embedding)[0]
+      label_probability = f"{(np.max(probabilities) * 100):.3f}"
+
       font = cv2.FONT_HERSHEY_SIMPLEX
       font_scale = 1
       color = (204, 0, 0)
       thickness = 0
-      origin_identitas = (50, 50)
-      cv2.putText(rgb_image, f'identitas : {label}', origin_identitas, font, font_scale, color, thickness)
+      cv2.putText(rgb_image, f'identitas : {label}', (50, 50), font, font_scale, color, thickness)
+      cv2.putText(rgb_image, f'probability : {label_probability}%', (25, 25), font, font_scale, color, thickness)
 
       # try:
       #   if (len(dfs) > 0):
