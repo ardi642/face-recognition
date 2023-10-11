@@ -16,7 +16,7 @@ class CapturedTrainingImage(CapturedImage):
   # image dalam bentuk rgb perlu diubah ke gbr jika menyimpannya melalui opencv2
 
   def get_face_embbeding(self, bgr_image):
-    embedding = DeepFace.represent(bgr_image)[0]['embedding']
+    embedding = DeepFace.represent(bgr_image, enforce_detection=False)[0]['embedding']
     return embedding
 
   def save_to_mongodb(self, object):

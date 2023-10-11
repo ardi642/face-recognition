@@ -9,6 +9,7 @@ from FaceDetectionModel.HOGModel import HOGModel
 
 from deepface import DeepFace
 import logging
+import pickle
 
 from configuration import configuration
 
@@ -18,6 +19,9 @@ root_logger = logging.getLogger()
 root_logger.propagate = False  # Disable propagation
 
 detection_model_options = ['haar cascade', 'mtcnn', 'hog']
+
+def get_face_embedding(bgr_image):
+  return DeepFace.represent(bgr_image, enforce_detection=False)[0]['embedding']
 
 class FaceRecognitionTopLevel(tk.Toplevel):
   def __init__(self, master, **kwargs):
@@ -29,6 +33,10 @@ class FaceRecognitionTopLevel(tk.Toplevel):
     self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
     self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     
+    # load face recognition model
+    with open('SVM_Model/svm_model.pkl', 'rb') as model_file:
+      self.model = pickle.load(model_file)
+
     self.webcam_label = tk.Label(self)
     self.webcam_label.pack(fill="both", expand=True, side="top")
 
@@ -97,27 +105,37 @@ class FaceRecognitionTopLevel(tk.Toplevel):
 
       
       detected_image = bgr_image[start_point[1]:end_point[1], start_point[0]:end_point[0]]
-      dataset_path = "DATASET/"
-      dfs = DeepFace.find(detected_image, dataset_path, enforce_detection=False)
+      # dataset_path = "DATASET/"
+      # dfs = DeepFace.find(detected_image, dataset_path, enforce_detection=False)
 
-      try:
-        if (len(dfs) > 0):
-          df = dfs[0].iloc[0]
-          similar_image_path = df['identity']
-          cosine_similarity = df['VGG-Face_cosine']
-          label = os.path.basename(os.path.dirname(similar_image_path))
-          font = cv2.FONT_HERSHEY_SIMPLEX
-          font_scale = 1
-          color = (204, 0, 0)
-          thickness = 0
-          origin_identitas = (50, 50)
-          print(f"cosine similarity : {cosine_similarity}")
-          if (cosine_similarity > configuration['max_threshold']):
-            cv2.putText(rgb_image, f'wajah tidak dikenali', origin_identitas, font, font_scale, color, thickness)
-          else:
-            cv2.putText(rgb_image, f'identitas : {label}', origin_identitas, font, font_scale, color, thickness)
-      except IndexError:
-        pass
+      image_embedding = get_face_embedding(detected_image)
+      arr_image_embedding = [image_embedding]
+      label = self.model.predict(arr_image_embedding)[0]
+      font = cv2.FONT_HERSHEY_SIMPLEX
+      font_scale = 1
+      color = (204, 0, 0)
+      thickness = 0
+      origin_identitas = (50, 50)
+      cv2.putText(rgb_image, f'identitas : {label}', origin_identitas, font, font_scale, color, thickness)
+
+      # try:
+      #   if (len(dfs) > 0):
+      #     df = dfs[0].iloc[0]
+      #     similar_image_path = df['identity']
+      #     cosine_similarity = df['VGG-Face_cosine']
+      #     label = os.path.basename(os.path.dirname(similar_image_path))
+      #     font = cv2.FONT_HERSHEY_SIMPLEX
+      #     font_scale = 1
+      #     color = (204, 0, 0)
+      #     thickness = 0
+      #     origin_identitas = (50, 50)
+      #     print(f"cosine similarity : {cosine_similarity}")
+      #     if (cosine_similarity > configuration['max_threshold']):
+      #       cv2.putText(rgb_image, f'wajah tidak dikenali', origin_identitas, font, font_scale, color, thickness)
+      #     else:
+      #       cv2.putText(rgb_image, f'identitas : {label}', origin_identitas, font, font_scale, color, thickness)
+      # except IndexError:
+      #   pass
 
     # Mengkonversi gambar ke PhotoImage
     rgba_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2RGBA)
