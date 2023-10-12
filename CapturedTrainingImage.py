@@ -32,7 +32,7 @@ class CapturedTrainingImage(CapturedImage):
     [x, y, width, height] = bounding_box
     start_point = (x, y)
     end_point = (x + width, y + height + additional_bottom)
-    dataset_path = f"DATASET/{identity}/"
+    dataset_path = f"DATASET DETEKSI WAJAH/{identity}/"
     urutan_path = f"URUTAN/{identity}.txt"
     if not os.path.exists(dataset_path):
       os.makedirs(dataset_path)
