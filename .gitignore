@@ -6,3 +6,4 @@ DATASET/
 *.pkl
 SVM_model/
 URUTAN/
+DATASET*/
