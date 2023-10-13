@@ -7,7 +7,7 @@ from FaceDetectionModel.MTCNNModel import MTCNNModel
 from FaceDetectionModel.HaarCascadeModel import HaarCascadeModel
 from FaceDetectionModel.HOGModel import HOGModel
 
-from HumanDetector import HumanDetector
+from humanverification import HumanVerification
 
 from deepface import DeepFace
 import logging, pickle, numpy as np
@@ -27,7 +27,7 @@ def get_face_embedding(bgr_image):
 class FaceRecognitionTopLevel(tk.Toplevel):
   def __init__(self, master, **kwargs):
     super().__init__(master, **kwargs)
-    self.geometry("1000x700")
+    self.geometry("1000x1000")
     
     self.title("uji pengenalan wajah")
     self.cap = cv2.VideoCapture(0)
@@ -36,10 +36,19 @@ class FaceRecognitionTopLevel(tk.Toplevel):
 
     self.left_frame = tk.Frame(self)
     self.left_frame.pack(fill="both", expand=True, side="left")
+
+    self.right_frame = tk.Frame(self)
+    self.right_frame.pack(side="right")
+
+    self.step_label = tk.Label(self.right_frame, text="")
+    self.step_label.pack(anchor="center")
     
     # load face recognition model
     with open('SVM_Model/svm_model.pkl', 'rb') as model_file:
       self.model = pickle.load(model_file)
+
+    with open('SVM_Model/verification_model.pkl', 'rb') as model_file:
+      self.verification_model = pickle.load(model_file)
 
     # self.humanDetector = HumanDetector()
     self.webcam_label = tk.Label(self.left_frame)
@@ -60,7 +69,7 @@ class FaceRecognitionTopLevel(tk.Toplevel):
     self.threshold_label = tk.Label(self.setting_frame, text='threshold maksimal cosine similarity')
     self.threshold_label.grid(column=0, row=2, padx=5, pady=5)
 
-    self.isVerified = False
+    self.human_verification = HumanVerification(self.verification_model)
     self.after_id = None
 
     self.threshold = tk.DoubleVar()
@@ -139,7 +148,17 @@ class FaceRecognitionTopLevel(tk.Toplevel):
 
     face_results = self.face_detector.detectMultipleFaces(bgr_image)
     # jika wajah terdeteksi
+    is_verified = self.human_verification.is_verified()
 
+    # if (len(face_results) > 0) and not is_verified:
+    #   current_verification_step = self.human_verification.get_current_step()
+    #   self.step_label.config(text=current_verification_step['detail'])
+    #   detected_image = self.get_detected_image(bgr_image, bounding_box)
+
+    #   if (self.human_verification.verify(detected_image, current_verification_step['step'])):
+    #     self.human_verification.add_verification_index()
+
+    # elif (len(face_results) > 0) and is_verified:
     if len(face_results) > 0:
       bounding_box = face_results[0]
       # method ini memodifikasi isi variabel modified_rgb_image
@@ -148,8 +167,8 @@ class FaceRecognitionTopLevel(tk.Toplevel):
       # method ini memodifikasi isi variabel modified_rgb_image
       self.identify_detected_image(modified_rgb_image, detected_image)      
 
-      self.set_image_in_label(modified_rgb_image)
-      self.after_id = self.after(10, self.show_webcam)
+    self.set_image_in_label(modified_rgb_image)
+    self.after_id = self.after(10, self.show_webcam)
 
   def process_destroy(self):
     self.after_cancel(self.after_id)
