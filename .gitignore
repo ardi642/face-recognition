@@ -7,3 +7,5 @@ DATASET/
 SVM_model/
 URUTAN/
 DATASET*/
+*.h5
+*.task
